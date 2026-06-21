@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import os
+import matplotlib.pyplot as plt
 
 # ==================================
 # CONFIGURACIÓN DATAROBOT
@@ -22,9 +23,7 @@ def hacer_prediccion(df):
 
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
 
-    payload = df.to_dict(orient="records")
-
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=df.to_dict(orient="records"))
 
     if response.status_code != 200:
         return {"error": response.text}
@@ -36,7 +35,7 @@ def hacer_prediccion(df):
 # CONFIG STREAMLIT
 # ==================================
 st.set_page_config(
-    page_title="Predicción Precio de Viviendas",
+    page_title="Predicción Precio Viviendas",
     page_icon="🏠",
     layout="wide"
 )
@@ -44,12 +43,12 @@ st.set_page_config(
 st.title("🏠 Predictor de Precio de Viviendas")
 
 st.markdown("""
-Este modelo de Machine Learning estima el **valor medio de una vivienda**
-utilizando variables socioeconómicas y geográficas entrenadas en DataRobot.
+Modelo de Machine Learning entrenado en DataRobot para estimar el valor medio de viviendas
+utilizando variables socioeconómicas y geográficas.
 """)
 
 # ==================================
-# INPUTS DEL USUARIO
+# INPUTS
 # ==================================
 st.sidebar.header("🔧 Variables del modelo")
 
@@ -82,7 +81,7 @@ datos = pd.DataFrame([{
 }])
 
 # ==================================
-# BOTÓN PREDICCIÓN
+# PREDICCIÓN
 # ==================================
 if st.button("🔍 Predecir precio de vivienda"):
 
@@ -96,7 +95,57 @@ if st.button("🔍 Predecir precio de vivienda"):
 
         st.success("Predicción generada correctamente")
 
-        st.metric("🏠 Precio estimado de la vivienda", f"${pred:,.2f} USD")
+        st.metric("🏠 Valor estimado", f"${pred:,.2f} USD")
+
+        # ==================================
+        # MAPA
+        # ==================================
+        st.subheader("📍 Ubicación de la vivienda")
+
+        map_data = pd.DataFrame({
+            "lat": [latitud],
+            "lon": [longitud]
+        })
+
+        st.map(map_data)
+
+        # ==================================
+        # GRÁFICO
+        # ==================================
+        st.subheader("📊 Relación ingreso vs precio")
+
+        fig, ax = plt.subplots()
+        ax.bar(["Ingreso medio", "Precio estimado"], [ingreso_mediano, pred/100000])
+        st.pyplot(fig)
+
+# ==================================
+# BOTONES CONTACTO
+# ==================================
+st.markdown("---")
+
+st.subheader("📲 Contacto")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("""
+    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20vi%20tu%20proyecto%20de%20predicción%20de%20viviendas"
+    target="_blank">
+    <button style="background-color:#25D366;color:white;padding:10px 20px;border-radius:8px;border:none;">
+    💬 WhatsApp Business
+    </button>
+    </a>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130/"
+    target="_blank">
+    <button style="background-color:#0077B5;color:white;padding:10px 20px;border-radius:8px;border:none;">
+    🔗 LinkedIn
+    </button>
+    </a>
+    """, unsafe_allow_html=True)
 
 # ==================================
 # FOOTER PROFESIONAL
@@ -110,12 +159,8 @@ st.markdown("""
 
 ---
 
-📌 Proyecto: Modelo predictivo de precios de vivienda basado en Machine Learning  
-Este sistema estima el valor medio de una vivienda utilizando variables geográficas y socioeconómicas,
-integrado con DataRobot y desplegado en Streamlit para consumo en tiempo real.
+📌 Proyecto: Sistema de predicción de precios de viviendas basado en Machine Learning  
+Integrado con DataRobot y desplegado en Streamlit Cloud para análisis interactivo en tiempo real.
 
 ---
-
-📱 WhatsApp Business: https://wa.me/573015704518  
-🔗 LinkedIn: www.linkedin.com/in/kely-jhojana-hincapié-zapata-502587130
 """)
