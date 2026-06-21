@@ -16,11 +16,11 @@ headers = {
 }
 
 if not API_KEY or not DEPLOYMENT_ID or not HOST:
-    st.error("Faltan credenciales de DataRobot")
+    st.error("❌ Faltan credenciales de DataRobot")
     st.stop()
 
 # ==================================
-# PREDICCIÓN
+# FUNCIÓN PREDICCIÓN
 # ==================================
 def hacer_prediccion(df):
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
@@ -36,44 +36,57 @@ def hacer_prediccion(df):
 
     return response.json()
 
+
 # ==================================
-# UI
+# UI PRINCIPAL
 # ==================================
-st.set_page_config(page_title="Simulador Inmobiliario", page_icon="🏡", layout="wide")
+st.set_page_config(
+    page_title="Simulador Inmobiliario",
+    page_icon="🏡",
+    layout="wide"
+)
 
 st.title("🏡 Simulador Inteligente de Valor de Vivienda")
 
 st.markdown("""
-### 📊 ¿Cómo funciona este modelo?
+## 📊 ¿Qué está prediciendo realmente este modelo?
 
-Este sistema NO predice una casa individual.  
-Predice el **valor promedio del mercado inmobiliario en una zona**, basado en características socioeconómicas.
+Este modelo NO predice una casa individual.
+
+👉 Está basado en datos tipo *California Housing*, donde cada registro representa una **zona geográfica (bloque censal)**.
+
+Por lo tanto, la predicción corresponde al:
+
+### 🏡 Valor medio de viviendas en una zona
+
+Es decir, el modelo estima el precio promedio de viviendas en un sector según sus características socioeconómicas.
 """)
 
-# ==================================
-# INPUTS
-# ==================================
-st.sidebar.header("🏠 Perfil de vivienda simulada")
 
-ingreso_mediano = st.sidebar.slider("Nivel de ingreso del sector", 0.5, 15.0, 5.0, 0.1)
+# ==================================
+# INPUTS (ZONA CENSAL SIMULADA)
+# ==================================
+st.sidebar.header("🏠 Variables del modelo")
+
+ingreso_mediano = st.sidebar.slider(
+    "Ingreso medio de la zona",
+    0.5, 15.0, 5.0, 0.1
+)
 
 proximidad_oceano = st.sidebar.selectbox(
-    "Ubicación",
+    "Proximidad al océano",
     ["NEAR BAY", "INLAND", "NEAR OCEAN", "<1H OCEAN", "ISLAND"]
 )
 
 latitud = st.sidebar.slider("Latitud", 32.0, 42.0, 34.0, 0.01)
 longitud = st.sidebar.slider("Longitud", -124.0, -114.0, -118.0, 0.01)
 
-tipo_vivienda = st.sidebar.selectbox(
-    "Tipo de entorno",
-    ["Zona urbana", "Zona suburbana", "Zona costera", "Zona rural"]
-)
+total_habitaciones = st.sidebar.number_input("Habitaciones (zona)", 100, 10000, 2000)
+total_dormitorios = st.sidebar.number_input("Dormitorios (zona)", 50, 5000, 500)
+poblacion = st.sidebar.number_input("Población (zona)", 100, 50000, 1500)
+hogares = st.sidebar.number_input("Hogares (zona)", 50, 5000, 500)
+edad_mediana_vivienda = st.sidebar.number_input("Edad mediana vivienda", 1, 100, 30)
 
-total_habitaciones = st.sidebar.number_input("Habitaciones del sector", 100, 10000, 2000)
-total_hogares = st.sidebar.number_input("Hogares del sector", 50, 5000, 500)
-poblacion = st.sidebar.number_input("Población del sector", 100, 50000, 1500)
-edad_mediana_vivienda = st.sidebar.number_input("Antigüedad promedio (años)", 1, 100, 30)
 
 # ==================================
 # DATAFRAME
@@ -84,10 +97,12 @@ datos = pd.DataFrame([{
     "latitud": latitud,
     "longitud": longitud,
     "total_habitaciones": total_habitaciones,
-    "total_hogares": total_hogares,
+    "total_dormitorios": total_dormitorios,
     "poblacion": poblacion,
+    "hogares": hogares,
     "edad_mediana_vivienda": edad_mediana_vivienda
 }])
+
 
 # ==================================
 # PREDICCIÓN
@@ -97,75 +112,35 @@ if st.button("🔍 Estimar valor de mercado"):
     resultado = hacer_prediccion(datos)
 
     if "error" in resultado:
-        st.error("Error en DataRobot")
-        st.code(resultado["error"])
+        st.error(f"Error DataRobot: {resultado['error']}")
     else:
-
         pred = resultado["data"][0]["prediction"]
 
-        st.success("✅ Análisis completado")
+        st.success("✅ Predicción generada correctamente")
 
-        st.metric("🏡 Valor estimado del sector", f"${pred:,.2f} USD")
+        st.metric("🏡 Valor estimado de la zona", f"${pred:,.2f} USD")
 
-        # ==================================
-        # 🧠 EXPLICABILIDAD DEL MODELO
-        # ==================================
-        st.subheader("🧠 ¿Qué está influyendo en este valor?")
+        # Interpretación
+        st.subheader("📊 Interpretación del mercado")
 
-        drivers = {
-            "Ingreso del sector": ingreso_mediano,
-            "Ubicación costera": 1 if proximidad_oceano != "INLAND" else 0,
-            "Población del sector": poblacion,
-            "Antigüedad de viviendas": edad_mediana_vivienda
-        }
-
-        impacto = pd.DataFrame({
-            "Factor": list(drivers.keys()),
-            "Valor": list(drivers.values()),
-            "Interpretación": [
-                "A mayor ingreso, mayor valor de vivienda",
-                "Ubicación cercana a costa suele aumentar valor",
-                "Alta población puede aumentar demanda",
-                "Viviendas más antiguas pueden reducir valor"
-            ]
-        })
-
-        st.dataframe(impacto, use_container_width=True, hide_index=True)
-
-        # ==================================
-        # 📊 ESCENARIO WHAT-IF
-        # ==================================
-        st.subheader("📊 Escenario: ¿Qué pasa si cambia el ingreso del sector?")
-
-        nuevo_ingreso = st.slider(
-            "Simular nuevo ingreso medio",
-            0.5, 15.0, ingreso_mediano, 0.1
-        )
-
-        factor = nuevo_ingreso / ingreso_mediano if ingreso_mediano != 0 else 1
-        pred_simulado = pred * factor
-
-        st.metric("Nuevo valor estimado", f"${pred_simulado:,.2f} USD")
-
-        if pred_simulado > pred:
-            st.success("📈 El valor aumenta con mayor ingreso del sector")
+        if pred < 150000:
+            st.info("Zona de valor accesible")
+        elif pred < 300000:
+            st.warning("Zona de valor medio")
         else:
-            st.warning("📉 El valor disminuye bajo este escenario")
+            st.error("Zona de alto valor inmobiliario")
 
-        # ==================================
-        # RESUMEN INPUT
-        # ==================================
+        # Mapa
         st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
-        st.subheader("🏠 Perfil de vivienda simulada")
+        # Explicación adicional
+        st.info("""
+📌 Cada registro representa una zona censal, no una vivienda individual.
 
-        st.write(f"""
-        - Tipo de entorno: {tipo_vivienda}  
-        - Ubicación: {proximidad_oceano}  
-        - Nivel de ingreso: {ingreso_mediano}  
-        - Edad promedio de viviendas: {edad_mediana_vivienda} años  
+Variables como habitaciones, población y hogares son totales del área.
         """)
+
 
 # ==================================
 # CONTACTO
@@ -189,11 +164,12 @@ with col2:
     st.markdown("""
     <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130/"
     target="_blank">
-    <button style="background:#0077B5;color:white;padding:10px 18px;border:none;border-radius:8px;">
+    <button style="background:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
     🔗 LinkedIn
     </button>
     </a>
     """, unsafe_allow_html=True)
+
 
 # ==================================
 # FOOTER
@@ -202,7 +178,9 @@ st.markdown("---")
 
 st.markdown("""
 ### 👩‍💻 Kely Jhojana Hincapié Zapata  
+
 Especialista en Analítica de Datos | Administración Financiera | Gestión de Redes de Datos  
 
-📌 Proyecto: Simulador inmobiliario basado en Machine Learning (DataRobot + Streamlit)
+📌 Proyecto: Simulador inmobiliario basado en Machine Learning  
+Integrado con DataRobot y desplegado en Streamlit Cloud.
 """)
