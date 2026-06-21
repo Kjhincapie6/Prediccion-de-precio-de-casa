@@ -20,7 +20,7 @@ if not API_KEY or not DEPLOYMENT_ID or not HOST:
     st.stop()
 
 # ==================================
-# FUNCIÓN PREDICCIÓN
+# PREDICCIÓN
 # ==================================
 def hacer_prediccion(df):
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
@@ -36,7 +36,6 @@ def hacer_prediccion(df):
 
     return response.json()
 
-
 # ==================================
 # UI PRINCIPAL
 # ==================================
@@ -49,29 +48,47 @@ st.set_page_config(
 st.title("🏡 Simulador Inteligente de Valor de Vivienda")
 
 st.markdown("""
-## 📊 ¿Qué está prediciendo realmente este modelo?
+## 📊 ¿Qué predice realmente este modelo?
 
-Este modelo NO predice una casa individual.
+Este modelo está basado en datos tipo **California Housing Dataset**.
 
-👉 Está basado en datos tipo *California Housing*, donde cada registro representa una **zona geográfica (bloque censal)**.
+👉 NO predice una vivienda individual.
 
-Por lo tanto, la predicción corresponde al:
+👉 Predice el **valor promedio del mercado inmobiliario por zona geográfica (bloque censal)**.
 
-### 🏡 Valor medio de viviendas en una zona
+---
 
-Es decir, el modelo estima el precio promedio de viviendas en un sector según sus características socioeconómicas.
+## 🧠 📌 Interpretación correcta del dataset
+
+Cada fila representa una **zona o sector**, no una casa específica.
+
+Por eso las variables significan:
+
+- 📍 ingreso_mediano → ingreso promedio del sector
+- 🏘️ total_habitaciones → total de habitaciones en la zona
+- 🏠 total_hogares → número de hogares del área
+- 👥 población → habitantes del sector
+- 🏡 edad_mediana_vivienda → antigüedad promedio de viviendas
+
+---
+
+## ⚠️ ¿Por qué los valores parecen altos?
+
+Esto ocurre porque:
+
+✔ Se trata de datos agregados por zona  
+✔ Incluye zonas de alto valor como California costera (NEAR BAY / NEAR OCEAN)  
+✔ Los precios representan promedios de mercado, no casas individuales  
+
+---
 """)
 
-
 # ==================================
-# INPUTS (ZONA CENSAL SIMULADA)
+# INPUTS
 # ==================================
 st.sidebar.header("🏠 Variables del modelo")
 
-ingreso_mediano = st.sidebar.slider(
-    "Ingreso medio de la zona",
-    0.5, 15.0, 5.0, 0.1
-)
+ingreso_mediano = st.sidebar.slider("Ingreso medio de la zona", 0.5, 15.0, 5.0, 0.1)
 
 proximidad_oceano = st.sidebar.selectbox(
     "Proximidad al océano",
@@ -87,7 +104,6 @@ poblacion = st.sidebar.number_input("Población (zona)", 100, 50000, 1500)
 hogares = st.sidebar.number_input("Hogares (zona)", 50, 5000, 500)
 edad_mediana_vivienda = st.sidebar.number_input("Edad mediana vivienda", 1, 100, 30)
 
-
 # ==================================
 # DATAFRAME
 # ==================================
@@ -102,7 +118,6 @@ datos = pd.DataFrame([{
     "hogares": hogares,
     "edad_mediana_vivienda": edad_mediana_vivienda
 }])
-
 
 # ==================================
 # PREDICCIÓN
@@ -120,7 +135,7 @@ if st.button("🔍 Estimar valor de mercado"):
 
         st.metric("🏡 Valor estimado de la zona", f"${pred:,.2f} USD")
 
-        # Interpretación
+        # Interpretación de negocio
         st.subheader("📊 Interpretación del mercado")
 
         if pred < 150000:
@@ -133,14 +148,6 @@ if st.button("🔍 Estimar valor de mercado"):
         # Mapa
         st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
-
-        # Explicación adicional
-        st.info("""
-📌 Cada registro representa una zona censal, no una vivienda individual.
-
-Variables como habitaciones, población y hogares son totales del área.
-        """)
-
 
 # ==================================
 # CONTACTO
@@ -169,7 +176,6 @@ with col2:
     </button>
     </a>
     """, unsafe_allow_html=True)
-
 
 # ==================================
 # FOOTER
