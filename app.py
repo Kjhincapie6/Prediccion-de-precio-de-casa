@@ -25,16 +25,21 @@ if not API_KEY or not DEPLOYMENT_ID or not HOST:
 def hacer_prediccion(df):
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
 
-    response = requests.post(
-        url,
-        headers=headers,
-        json=df.to_dict(orient="records")
-    )
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json=df.to_dict(orient="records"),
+            timeout=30
+        )
 
-    if response.status_code != 200:
-        return {"error": response.text}
+        if response.status_code != 200:
+            return {"error": response.text}
 
-    return response.json()
+        return response.json()
+
+    except Exception as e:
+        return {"error": str(e)}
 
 # ==================================
 # UI
@@ -46,14 +51,14 @@ st.title("🏡 Simulador Inteligente de Valor de Vivienda")
 st.markdown("""
 ### 📊 ¿Cómo funciona este modelo?
 
-Este sistema NO predice una casa individual.
+Este sistema NO predice una casa individual.  
 Predice el **valor promedio del mercado inmobiliario en una zona**, basado en características socioeconómicas.
 
 👉 Lo interpretamos como una **vivienda representativa del sector**
 """)
 
 # ==================================
-# INPUTS (SIMULACIÓN DE VIVIENDA)
+# INPUTS
 # ==================================
 st.sidebar.header("🏠 Perfil de vivienda simulada")
 
@@ -67,13 +72,11 @@ proximidad_oceano = st.sidebar.selectbox(
 latitud = st.sidebar.slider("Latitud", 32.0, 42.0, 34.0, 0.01)
 longitud = st.sidebar.slider("Longitud", -124.0, -114.0, -118.0, 0.01)
 
-# 🔥 reinterpretación humana (NO técnica)
 tipo_vivienda = st.sidebar.selectbox(
     "Tipo de entorno",
     ["Zona urbana", "Zona suburbana", "Zona costera", "Zona rural"]
 )
 
-# variables técnicas del modelo (ocultas conceptualmente)
 total_habitaciones = st.sidebar.number_input("Habitaciones del sector", 100, 10000, 2000)
 total_hogares = st.sidebar.number_input("Hogares en el sector", 50, 5000, 500)
 poblacion = st.sidebar.number_input("Población del sector", 100, 50000, 1500)
@@ -101,20 +104,16 @@ if st.button("🔍 Estimar valor de mercado"):
     resultado = hacer_prediccion(datos)
 
     if "error" in resultado:
-        st.error(resultado["error"])
+        st.error("Error en DataRobot")
+        st.code(resultado["error"])
     else:
         pred = resultado["data"][0]["prediction"]
 
         st.success("✅ Análisis completado")
 
-        # ==================================
-        # RESULTADO PRINCIPAL
-        # ==================================
         st.metric("🏡 Valor estimado del sector", f"${pred:,.2f} USD")
 
-        # ==================================
-        # INTERPRETACIÓN DE NEGOCIO
-        # ==================================
+        # interpretación negocio
         st.subheader("📊 Interpretación del mercado")
 
         if pred < 150000:
@@ -124,15 +123,11 @@ if st.button("🔍 Estimar valor de mercado"):
         else:
             st.error("🔴 Zona de alto valor inmobiliario")
 
-        # ==================================
-        # MAPA
-        # ==================================
+        # mapa
         st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
-        # ==================================
-        # PERFIL SIMULADO
-        # ==================================
+        # perfil
         st.subheader("🏠 Perfil de vivienda simulada")
 
         st.write(f"""
@@ -162,7 +157,7 @@ with col1:
 
 with col2:
     st.markdown("""
-    <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130"
+    <a href="https://www.linkedin.com/in/kely-jhojana-hincapié-zapata-502587130/"
     target="_blank">
     <button style="background:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
     🔗 LinkedIn
