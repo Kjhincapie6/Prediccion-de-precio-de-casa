@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import requests
 import os
-import matplotlib.pyplot as plt
 
 # ==================================
 # CONFIGURACIÓN DATAROBOT
@@ -10,10 +9,6 @@ import matplotlib.pyplot as plt
 API_KEY = os.getenv("DATAROBOT_API_KEY")
 DEPLOYMENT_ID = os.getenv("DATAROBOT_DEPLOYMENT_ID")
 HOST = os.getenv("DATAROBOT_HOST")
-
-if not API_KEY or not DEPLOYMENT_ID or not HOST:
-    st.error("Faltan variables de entorno de DataRobot")
-    st.stop()
 
 headers = {
     "Authorization": f"Bearer {API_KEY}",
@@ -27,23 +22,16 @@ def hacer_prediccion(df):
 
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
 
-    try:
-        response = requests.post(
-            url,
-            headers=headers,
-            json=df.to_dict(orient="records"),
-            timeout=30
-        )
-    except Exception as e:
-        return {"error": str(e)}
+    response = requests.post(
+        url,
+        headers=headers,
+        json=df.to_dict(orient="records")
+    )
 
     if response.status_code != 200:
         return {"error": response.text}
 
-    try:
-        return response.json()
-    except:
-        return {"error": "Respuesta inválida de DataRobot"}
+    return response.json()
 
 
 # ==================================
@@ -68,6 +56,7 @@ utilizando variables socioeconómicas y geográficas.
 st.sidebar.header("🔧 Variables del modelo")
 
 ingreso_mediano = st.sidebar.slider("Ingreso medio de la zona", 0.5, 15.0, 5.0)
+
 proximidad_oceano = st.sidebar.selectbox(
     "Proximidad al océano",
     ["NEAR BAY", "INLAND", "NEAR OCEAN", "<1H OCEAN", "ISLAND"]
@@ -117,20 +106,24 @@ if st.button("🔍 Predecir precio de vivienda"):
         # ==================================
         st.subheader("📍 Ubicación de la vivienda")
 
-        st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
+        map_data = pd.DataFrame({
+            "lat": [latitud],
+            "lon": [longitud]
+        })
+
+        st.map(map_data)
 
         # ==================================
-        # GRÁFICO MEJORADO
+        # GRÁFICO (CORREGIDO SIN MATPLOTLIB)
         # ==================================
-        st.subheader("📊 Comparación de variables")
+        st.subheader("📊 Relación ingreso vs precio")
 
-        fig, ax = plt.subplots()
-        ax.bar(
-            ["Ingreso medio", "Precio estimado"],
-            [ingreso_mediano * 10000, pred]
-        )
-        ax.set_ylabel("Escala comparable")
-        st.pyplot(fig)
+        chart_data = pd.DataFrame({
+            "Métrica": ["Ingreso medio", "Precio estimado"],
+            "Valor": [ingreso_mediano, pred / 100000]
+        })
+
+        st.bar_chart(chart_data.set_index("Métrica"))
 
 # ==================================
 # BOTONES CONTACTO
@@ -153,7 +146,7 @@ with col1:
 
 with col2:
     st.markdown("""
-    <a href="www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130"
+    <a href="https://www.linkedin.com/in/kely-jhojana-hincapié-zapata-502587130/"
     target="_blank">
     <button style="background-color:#0077B5;color:white;padding:10px 20px;border-radius:8px;border:none;">
     🔗 LinkedIn
@@ -162,7 +155,7 @@ with col2:
     """, unsafe_allow_html=True)
 
 # ==================================
-# FOOTER
+# FOOTER PROFESIONAL
 # ==================================
 st.markdown("---")
 
@@ -175,4 +168,7 @@ st.markdown("""
 
 📌 Proyecto: Sistema de predicción de precios de viviendas basado en Machine Learning  
 Integrado con DataRobot y desplegado en Streamlit Cloud para análisis interactivo en tiempo real.
+
+---
+""") real.
 """)
