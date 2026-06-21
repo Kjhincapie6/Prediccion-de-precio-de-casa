@@ -175,8 +175,9 @@ with col2:
 # ==================================
 st.markdown("---")
 st.markdown("""
-### 👩‍💻 Kely Jhojana Hincapié Zapata  
-Especialista en Analítica de Datos | Administración Financiera | Gestión de Redes de Datos  
+### 👩‍💻 Desarrollado por Kely Jhojana Hincapié Zapata
 
-📌 Proyecto: Simulador inmobiliario basado en Machine Learning (DataRobot + Streamlit)
+Especialista en Analítica de Datos | Administración Financiera | Tecnóloga en Gestión de Redes de Datos  
+
+📊 Desarrollo de soluciones de Machine Learning aplicadas a valoración inmobiliaria y analítica predictiva con despliegue en Streamlit + DataRobot.
 """)
