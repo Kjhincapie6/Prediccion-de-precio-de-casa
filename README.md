@@ -1,2 +1,2 @@
-# Prediccion-de-precio-de-casa
+# Prediccion-de-precio-de-casas
 Predice  los precios de vivienda 
