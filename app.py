@@ -20,7 +20,7 @@ headers = {
 }
 
 # ==================================
-# FUNCIÓN PREDICCIÓN
+# PREDICCIÓN
 # ==================================
 def hacer_prediccion(df):
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
@@ -55,21 +55,22 @@ st.markdown("""
 
 Este modelo está basado en datasets tipo **California Housing Dataset**.
 
-👉 NO predice el valor de una casa individual.  
+👉 NO predice el valor de una vivienda individual.  
 👉 Predice el **valor promedio del mercado inmobiliario en una zona geográfica (bloque censal)**.
 
 ---
 
-📌 Cada fila del dataset representa una ZONA, no una vivienda.
+📌 Cada fila del dataset representa una ZONA, no una casa.
 
 ### Variables del modelo:
 - ingreso_mediano → ingreso promedio del sector  
 - total_habitaciones → total de habitaciones en la zona  
-- total_hogares → número de hogares en el área  
-- población → habitantes del bloque  
-- edad_mediana_vivienda → antigüedad promedio de viviendas  
+- total_dormitorios → total de dormitorios en la zona  
+- poblacion → habitantes del bloque  
+- hogares → número de hogares  
+- edad_mediana_vivienda → antigüedad promedio  
 
-⚠️ Los valores varían según la ubicación (zonas costeras vs interiores).
+⚠️ Los valores dependen fuertemente de la ubicación (zonas costeras vs interiores).
 """)
 
 # ==================================
@@ -140,7 +141,7 @@ if st.button("🔍 Estimar valor de mercado"):
         st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
-        # Interpretación profesional
+        # Explicación profesional
         st.info("""
 📌 Interpretación profesional:
 Este valor representa el precio promedio del mercado inmobiliario en la zona analizada.
@@ -157,7 +158,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20vi%20tu%20simulador%20inmobiliario"
+    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20estuve%20revisando%20tu%20proyecto%20de%20simulador%20inmobiliario%20con%20Machine%20Learning.%0A%0AEstoy%20interesado%20en%20implementar%20un%20modelo%20similar%20en%20mi%20empresa%20para%20an%C3%A1lisis%20de%20valor%20de%20mercado%20por%20zonas.%0A%0AQuisiera%20conocer%20m%C3%A1s%20sobre%20tu%20enfoque%20t%C3%A9cnico%20y%20la%20posibilidad%20de%20adaptaci%C3%B3n%20a%20un%20entorno%20empresarial."
     target="_blank">
     <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;">
     💬 WhatsApp Business
