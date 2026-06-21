@@ -10,8 +10,9 @@ API_KEY = os.getenv("DATAROBOT_API_KEY")
 DEPLOYMENT_ID = os.getenv("DATAROBOT_DEPLOYMENT_ID")
 HOST = os.getenv("DATAROBOT_HOST")
 
+# 🔥 FIX IMPORTANTE: DataRobot usa "Token", no "Bearer"
 headers = {
-    "Authorization": f"Bearer {API_KEY}",
+    "Authorization": f"Token {API_KEY}",
     "Content-Type": "application/json"
 }
 
@@ -36,8 +37,9 @@ def hacer_prediccion(df):
 
     return response.json()
 
+
 # ==================================
-# UI PRINCIPAL
+# UI
 # ==================================
 st.set_page_config(
     page_title="Simulador Inmobiliario",
@@ -48,39 +50,29 @@ st.set_page_config(
 st.title("🏡 Simulador Inteligente de Valor de Vivienda")
 
 st.markdown("""
-## 📊 ¿Qué predice realmente este modelo?
+### 📊 ¿Qué predice realmente este modelo?
 
 Este modelo está basado en datos tipo **California Housing Dataset**.
 
-👉 NO predice una vivienda individual.
+👉 NO predice una casa individual.
 
 👉 Predice el **valor promedio del mercado inmobiliario por zona geográfica (bloque censal)**.
 
 ---
 
-## 🧠 📌 Interpretación correcta del dataset
+📌 Cada fila del dataset representa una ZONA, no una vivienda.
 
-Cada fila representa una **zona o sector**, no una casa específica.
+Esto significa:
 
-Por eso las variables significan:
-
-- 📍 ingreso_mediano → ingreso promedio del sector
-- 🏘️ total_habitaciones → total de habitaciones en la zona
-- 🏠 total_hogares → número de hogares del área
-- 👥 población → habitantes del sector
-- 🏡 edad_mediana_vivienda → antigüedad promedio de viviendas
+- ingreso_mediano → ingreso promedio del sector  
+- total_habitaciones → habitaciones totales del área  
+- total_hogares → hogares en la zona  
+- población → habitantes del bloque  
+- edad_mediana_vivienda → antigüedad promedio  
 
 ---
 
-## ⚠️ ¿Por qué los valores parecen altos?
-
-Esto ocurre porque:
-
-✔ Se trata de datos agregados por zona  
-✔ Incluye zonas de alto valor como California costera (NEAR BAY / NEAR OCEAN)  
-✔ Los precios representan promedios de mercado, no casas individuales  
-
----
+⚠️ Los valores pueden parecer altos o bajos porque dependen de la zona (ej. California costera vs interior).
 """)
 
 # ==================================
@@ -129,13 +121,14 @@ if st.button("🔍 Estimar valor de mercado"):
     if "error" in resultado:
         st.error(f"Error DataRobot: {resultado['error']}")
     else:
+
         pred = resultado["data"][0]["prediction"]
 
         st.success("✅ Predicción generada correctamente")
 
         st.metric("🏡 Valor estimado de la zona", f"${pred:,.2f} USD")
 
-        # Interpretación de negocio
+        # Interpretación
         st.subheader("📊 Interpretación del mercado")
 
         if pred < 150000:
