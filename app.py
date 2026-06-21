@@ -6,11 +6,11 @@ import os
 # ==================================
 # CONFIG DATAROBOT
 # ==================================
-API_KEY = os.getenv("DATAROBOT_API_KEY")
-DEPLOYMENT_ID = os.getenv("DATAROBOT_DEPLOYMENT_ID")
-HOST = os.getenv("DATAROBOT_HOST")
 
-# 🔥 FIX IMPORTANTE: DataRobot usa "Token", no "Bearer"
+API_KEY = st.secrets["DATAROBOT_API_KEY"]
+DEPLOYMENT_ID = st.secrets["DATAROBOT_DEPLOYMENT_ID"]
+HOST = st.secrets["DATAROBOT_HOST"]
+
 headers = {
     "Authorization": f"Token {API_KEY}",
     "Content-Type": "application/json"
