@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import requests
 import os
-import matplotlib.pyplot as plt
 
 # ==================================
 # CONFIGURACIÓN DATAROBOT
@@ -17,10 +16,10 @@ headers = {
 }
 
 # ==================================
-# VALIDACIÓN API KEY
+# VALIDACIÓN DE VARIABLES
 # ==================================
 if not API_KEY or not DEPLOYMENT_ID or not HOST:
-    st.error("⚠️ Faltan variables de entorno de DataRobot (API KEY / DEPLOYMENT_ID / HOST)")
+    st.error("❌ Faltan credenciales de DataRobot (API KEY / DEPLOYMENT_ID / HOST)")
     st.stop()
 
 # ==================================
@@ -29,9 +28,11 @@ if not API_KEY or not DEPLOYMENT_ID or not HOST:
 def hacer_prediccion(df):
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
 
-    payload = df.to_dict(orient="records")
-
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(
+        url,
+        headers=headers,
+        json=df.to_dict(orient="records")
+    )
 
     if response.status_code != 200:
         return {"error": response.text}
@@ -56,7 +57,7 @@ basado en variables socioeconómicas y geográficas.
 """)
 
 # ==================================
-# INPUTS (ESCALAS CORREGIDAS)
+# INPUTS
 # ==================================
 st.sidebar.header("🔧 Variables del modelo")
 
@@ -101,25 +102,31 @@ if st.button("🔍 Predecir precio de vivienda"):
     else:
         pred = resultado["data"][0]["prediction"]
 
-        st.success("Predicción generada correctamente")
+        st.success("✅ Predicción generada correctamente")
 
         st.metric("🏠 Valor estimado", f"${pred:,.2f} USD")
 
         # MAPA
-        st.subheader("📍 Ubicación")
+        st.subheader("📍 Ubicación de la vivienda")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
-        # GRÁFICO SIMPLE
-        st.subheader("📊 Comparación")
-        fig, ax = plt.subplots()
-        ax.bar(["Ingreso medio", "Precio estimado"], [ingreso_mediano, pred/100000])
-        st.pyplot(fig)
+        # GRÁFICO SIN MATPLOTLIB (CORREGIDO)
+        st.subheader("📊 Comparación de variables")
+
+        st.bar_chart(
+            pd.DataFrame(
+                {
+                    "Valor": [ingreso_mediano, pred / 100000]
+                },
+                index=["Ingreso medio", "Precio estimado"]
+            )
+        )
 
 # ==================================
-# CONTACTO (WHATSAPP + LINKEDIN)
+# CONTACTO PROFESIONAL
 # ==================================
 st.markdown("---")
-st.subheader("📲 Contacto profesional")
+st.subheader("📲 Contacto")
 
 col1, col2 = st.columns(2)
 
@@ -138,7 +145,7 @@ with col2:
     <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130"
     target="_blank">
     <button style="background-color:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
-    🔗 LinkedIn
+    🔗 LinkedIn Profesional
     </button>
     </a>
     """, unsafe_allow_html=True)
@@ -153,5 +160,5 @@ st.markdown("""
 
 Especialista en Analítica de Datos | Profesional en Administración Financiera | Tecnóloga en Gestión de Redes de Datos  
 
-Proyecto: Sistema de predicción de precios de viviendas usando Machine Learning en DataRobot y visualización en Streamlit.
+Proyecto: Sistema de predicción de precios de viviendas usando Machine Learning con DataRobot y visualización en Streamlit.
 """)
