@@ -114,7 +114,7 @@ if st.button("🔍 Predecir precio de vivienda"):
         st.map(map_data)
 
         # ==================================
-        # GRÁFICO (CORREGIDO SIN MATPLOTLIB)
+        # GRÁFICO (SIN MATPLOTLIB)
         # ==================================
         st.subheader("📊 Relación ingreso vs precio")
 
@@ -126,7 +126,7 @@ if st.button("🔍 Predecir precio de vivienda"):
         st.bar_chart(chart_data.set_index("Métrica"))
 
 # ==================================
-# BOTONES CONTACTO
+# CONTACTO
 # ==================================
 st.markdown("---")
 
@@ -146,7 +146,7 @@ with col1:
 
 with col2:
     st.markdown("""
-    <a href="https://www.linkedin.com/in/kely-jhojana-hincapié-zapata-502587130/"
+    <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%B3-zapata-502587130/"
     target="_blank">
     <button style="background-color:#0077B5;color:white;padding:10px 20px;border-radius:8px;border:none;">
     🔗 LinkedIn
@@ -155,7 +155,7 @@ with col2:
     """, unsafe_allow_html=True)
 
 # ==================================
-# FOOTER PROFESIONAL
+# FOOTER (CORREGIDO SIN ERROR DE STRINGS)
 # ==================================
 st.markdown("---")
 
@@ -170,5 +170,4 @@ st.markdown("""
 Integrado con DataRobot y desplegado en Streamlit Cloud para análisis interactivo en tiempo real.
 
 ---
-""") real.
 """)
