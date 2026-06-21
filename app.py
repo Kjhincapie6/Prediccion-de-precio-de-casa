@@ -4,7 +4,7 @@ import requests
 import os
 
 # ==================================
-# CONFIG DATAROBOT
+# CONFIGURACIÓN DATAROBOT
 # ==================================
 API_KEY = os.getenv("DATAROBOT_API_KEY")
 DEPLOYMENT_ID = os.getenv("DATAROBOT_DEPLOYMENT_ID")
@@ -15,169 +15,232 @@ headers = {
     "Content-Type": "application/json"
 }
 
-if not API_KEY or not DEPLOYMENT_ID or not HOST:
-    st.error("Faltan credenciales de DataRobot")
-    st.stop()
-
 # ==================================
-# PREDICCIÓN
+# FUNCIÓN DE PREDICCIÓN (ROBUSTA)
 # ==================================
 def hacer_prediccion(df):
+
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
 
-    response = requests.post(
-        url,
-        headers=headers,
-        json=df.to_dict(orient="records")
-    )
+    df = df.copy()
+
+    # =========================
+    # FIX CRÍTICO DE EDAD (CSV + manual)
+    # =========================
+    if "edad_dias" not in df.columns:
+
+        if "edad_anhios" in df.columns:
+            df["edad_dias"] = df["edad_anhios"] * 365
+
+        elif "edad_anios" in df.columns:
+            df["edad_dias"] = df["edad_anios"] * 365
+
+        elif "edad_anios" not in df.columns:
+            return {"error": "No se encontró columna de edad válida"}
+
+    # =========================
+    # RENOMBRAR VARIABLES (DataRobot)
+    # =========================
+    df = df.rename(columns={
+        "edad_dias": "age",
+        "genero": "gender",
+        "estatura_cm": "height",
+        "peso_kg": "weight",
+        "presion_sistolica": "ap_hi",
+        "presion_diastolica": "ap_lo",
+        "colesterol": "cholesterol",
+        "glucosa": "gluc",
+        "fuma": "smoke",
+        "consume_alcohol": "alco",
+        "actividad_fisica": "active",
+        "enfermedad_cardiovascular": "cardio"
+    })
+
+    datos = df.to_dict(orient="records")
+
+    response = requests.post(url, headers=headers, json=datos)
 
     if response.status_code != 200:
         return {"error": response.text}
 
     return response.json()
 
-# ==================================
-# UI
-# ==================================
-st.set_page_config(page_title="Simulador Inmobiliario", page_icon="🏡", layout="wide")
-
-st.title("🏡 Simulador Inteligente de Valor de Vivienda")
-
-st.markdown("""
-### 📊 ¿Cómo funciona este modelo?
-
-Este sistema NO predice una casa individual.
-Predice el **valor promedio del mercado inmobiliario en una zona**, basado en características socioeconómicas.
-
-👉 Lo interpretamos como una **vivienda representativa del sector**
-""")
 
 # ==================================
-# INPUTS (SIMULACIÓN DE VIVIENDA)
+# STREAMLIT CONFIG
 # ==================================
-st.sidebar.header("🏠 Perfil de vivienda simulada")
-
-ingreso_mediano = st.sidebar.slider("Nivel de ingreso del sector", 0.5, 15.0, 5.0, 0.1)
-
-proximidad_oceano = st.sidebar.selectbox(
-    "Ubicación",
-    ["NEAR BAY", "INLAND", "NEAR OCEAN", "<1H OCEAN", "ISLAND"]
+st.set_page_config(
+    page_title="Predicción de Riesgo Cardiovascular",
+    page_icon="🩺",
+    layout="wide"
 )
 
-latitud = st.sidebar.slider("Latitud", 32.0, 42.0, 34.0, 0.01)
-longitud = st.sidebar.slider("Longitud", -124.0, -114.0, -118.0, 0.01)
-
-# 🔥 reinterpretación humana (NO técnica)
-tipo_vivienda = st.sidebar.selectbox(
-    "Tipo de entorno",
-    ["Zona urbana", "Zona suburbana", "Zona costera", "Zona rural"]
+st.markdown(
+    "<h1 style='text-align: center; color: #2E86C1;'>🩺 Predictor de Riesgo Cardiovascular</h1>",
+    unsafe_allow_html=True
 )
 
-# variables técnicas del modelo (ocultas conceptualmente)
-total_habitaciones = st.sidebar.number_input("Habitaciones del sector", 100, 10000, 2000)
-total_hogares = st.sidebar.number_input("Hogares en el sector", 50, 5000, 500)
-poblacion = st.sidebar.number_input("Población del sector", 100, 50000, 1500)
-edad_mediana_vivienda = st.sidebar.number_input("Antigüedad promedio (años)", 1, 100, 30)
+st.markdown(
+    "<p style='text-align: center;'>Ingrese los datos del paciente o cargue un archivo CSV.</p>",
+    unsafe_allow_html=True
+)
+
+# ==================================
+# INPUT MANUAL
+# ==================================
+st.sidebar.header("Datos del paciente")
+
+genero = st.sidebar.selectbox("Género", ["Masculino", "Femenino"])
+edad_anios = st.sidebar.slider("Edad (años)", 18, 100, 40)
+estatura_cm = st.sidebar.slider("Estatura (cm)", 120, 220, 170)
+peso_kg = st.sidebar.slider("Peso (kg)", 30, 200, 70)
+presion_sistolica = st.sidebar.slider("Presión Sistólica", 80, 220, 120)
+presion_diastolica = st.sidebar.slider("Presión Diastólica", 50, 150, 80)
+glucosa = st.sidebar.slider("Glucosa", 50, 300, 100)
+
+fuma = st.sidebar.selectbox("¿Fuma?", ["No", "Sí"])
+consume_alcohol = st.sidebar.selectbox("¿Alcohol?", ["No", "Sí"])
+actividad_fisica = st.sidebar.selectbox("Actividad Física", ["Baja", "Media", "Alta"])
+enfermedad_cardiovascular = st.sidebar.selectbox("Cardiovascular", ["No", "Sí"])
+colesterol = st.sidebar.selectbox("Colesterol", [1, 2, 3])
+
+# ==================================
+# CODIFICACIÓN
+# ==================================
+genero = 1 if genero == "Masculino" else 0
+fuma = 1 if fuma == "Sí" else 0
+consume_alcohol = 1 if consume_alcohol == "Sí" else 0
+enfermedad_cardiovascular = 1 if enfermedad_cardiovascular == "Sí" else 0
+
+actividad_map = {"Baja": 0, "Media": 1, "Alta": 2}
+actividad_fisica = actividad_map[actividad_fisica]
 
 # ==================================
 # DATAFRAME
 # ==================================
-datos = pd.DataFrame([{
-    "ingreso_mediano": ingreso_mediano,
-    "proximidad_oceano": proximidad_oceano,
-    "latitud": latitud,
-    "longitud": longitud,
-    "total_habitaciones": total_habitaciones,
-    "total_hogares": total_hogares,
-    "poblacion": poblacion,
-    "edad_mediana_vivienda": edad_mediana_vivienda
+datos_manual = pd.DataFrame([{
+    "edad_dias": edad_anios * 365,
+    "genero": genero,
+    "estatura_cm": estatura_cm,
+    "peso_kg": peso_kg,
+    "presion_sistolica": presion_sistolica,
+    "presion_diastolica": presion_diastolica,
+    "colesterol": colesterol,
+    "glucosa": glucosa,
+    "fuma": fuma,
+    "consume_alcohol": consume_alcohol,
+    "actividad_fisica": actividad_fisica,
+    "enfermedad_cardiovascular": enfermedad_cardiovascular
 }])
 
 # ==================================
-# PREDICCIÓN
+# RESULTADO UI
 # ==================================
-if st.button("🔍 Estimar valor de mercado"):
+col1, col2 = st.columns([2, 1])
 
-    resultado = hacer_prediccion(datos)
+with col1:
+    st.subheader("Datos ingresados")
+    st.dataframe(datos_manual, use_container_width=True)
 
-    if "error" in resultado:
-        st.error(resultado["error"])
-    else:
-        pred = resultado["data"][0]["prediction"]
+with col2:
 
-        st.success("✅ Análisis completado")
+    debug = st.checkbox("Debug técnico")
 
-        # ==================================
-        # RESULTADO PRINCIPAL
-        # ==================================
-        st.metric("🏡 Valor estimado del sector", f"${pred:,.2f} USD")
+    if st.button("🔍 Predecir"):
 
-        # ==================================
-        # INTERPRETACIÓN DE NEGOCIO
-        # ==================================
-        st.subheader("📊 Interpretación del mercado")
+        resultado = hacer_prediccion(datos_manual)
 
-        if pred < 150000:
-            st.warning("🔵 Zona de precio accesible")
-        elif pred < 300000:
-            st.info("🟡 Zona de precio medio")
+        if "error" in resultado:
+            st.error(resultado["error"])
         else:
-            st.error("🔴 Zona de alto valor inmobiliario")
 
-        # ==================================
-        # MAPA
-        # ==================================
-        st.subheader("📍 Ubicación del análisis")
-        st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
+            if debug:
+                st.json(resultado)
 
-        # ==================================
-        # PERFIL SIMULADO
-        # ==================================
-        st.subheader("🏠 Perfil de vivienda simulada")
+            fila = resultado["data"][0]
+            pred = fila["prediction"]
 
-        st.write(f"""
-        - Tipo de entorno: {tipo_vivienda}  
-        - Ubicación: {proximidad_oceano}  
-        - Nivel de ingreso: {ingreso_mediano}  
-        - Edad promedio de viviendas: {edad_mediana_vivienda} años  
-        """)
+            st.metric("Predicción de riesgo", str(pred))
+
+            if pred == 1:
+                st.error("🔴 Alto riesgo cardiovascular")
+            else:
+                st.success("🟢 Bajo riesgo cardiovascular")
+
 
 # ==================================
-# CONTACTO
+# PREDICCIÓN CSV
+# ==================================
+st.markdown("### 📂 Predicción en lote")
+
+archivo_csv = st.file_uploader("Subir CSV", type=["csv"])
+
+if archivo_csv:
+
+    datos_csv = pd.read_csv(archivo_csv)
+
+    st.dataframe(datos_csv.head())
+
+    if st.button("Predecir CSV"):
+
+        if "id_paciente" not in datos_csv.columns:
+            datos_csv["id_paciente"] = range(1, len(datos_csv) + 1)
+
+        resultado = hacer_prediccion(datos_csv)
+
+        if "error" in resultado:
+            st.error(resultado["error"])
+        else:
+
+            predicciones = [x["prediction"] for x in resultado["data"]]
+
+            datos_csv["prediccion"] = predicciones
+
+            st.success("Predicciones generadas")
+            st.dataframe(datos_csv)
+
+            st.download_button(
+                "Descargar CSV",
+                datos_csv.to_csv(index=False).encode("utf-8"),
+                "predicciones.csv",
+                "text/csv"
+            )
+
+
+# ==================================
+# FOOTER + CONTACTO (CORREGIDO LINKEDIN)
 # ==================================
 st.markdown("---")
-st.subheader("📲 Contacto profesional")
+
+st.markdown("""
+### 👩‍💻 Desarrollado por Kely Jhojana Hincapié Zapata
+
+Especialista en Analítica de Datos | Administración Financiera | Tecnóloga en Redes de Datos
+
+📌 Proyecto: Modelo predictivo de riesgo cardiovascular con DataRobot + Streamlit
+
+---
+
+""", unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20vi%20tu%20simulador%20inmobiliario"
+    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20quiero%20más%20información"
     target="_blank">
-    <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;">
-    💬 WhatsApp Business
+    <button style="background:#25D366;color:white;padding:10px;border-radius:8px;">
+    WhatsApp Business
     </button>
     </a>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
-    <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130"
+    <a href="https://www.linkedin.com/in/kely-jhojana-hincapie-zapata-502587130/"
     target="_blank">
-    <button style="background:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
-    🔗 LinkedIn
+    <button style="background:#0077B5;color:white;padding:10px;border-radius:8px;">
+    LinkedIn
     </button>
     </a>
     """, unsafe_allow_html=True)
-
-# ==================================
-# FOOTER
-# ==================================
-st.markdown("---")
-st.markdown("""
-### 👩‍💻 Desarrollado por Kely Jhojana Hincapié Zapata
-
-Especialista en Analítica de Datos | Administración Financiera | Tecnóloga en Gestión de Redes de Datos  
-
-📊 Desarrollo de soluciones de Machine Learning aplicadas a valoración inmobiliaria y analítica predictiva con despliegue en Streamlit + DataRobot.
-""")
