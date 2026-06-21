@@ -4,7 +4,7 @@ import requests
 import os
 
 # ==================================
-# CONFIGURACIÓN DATAROBOT
+# CONFIG DATAROBOT
 # ==================================
 API_KEY = os.getenv("DATAROBOT_API_KEY")
 DEPLOYMENT_ID = os.getenv("DATAROBOT_DEPLOYMENT_ID")
@@ -15,15 +15,12 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# ==================================
-# VALIDACIÓN DE VARIABLES
-# ==================================
 if not API_KEY or not DEPLOYMENT_ID or not HOST:
-    st.error("❌ Faltan credenciales de DataRobot (API KEY / DEPLOYMENT_ID / HOST)")
+    st.error("Faltan credenciales de DataRobot")
     st.stop()
 
 # ==================================
-# FUNCIÓN PREDICCIÓN
+# PREDICCIÓN
 # ==================================
 def hacer_prediccion(df):
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
@@ -39,42 +36,48 @@ def hacer_prediccion(df):
 
     return response.json()
 
-
 # ==================================
-# CONFIG STREAMLIT
+# UI
 # ==================================
-st.set_page_config(
-    page_title="Predicción Precio Viviendas",
-    page_icon="🏠",
-    layout="wide"
-)
+st.set_page_config(page_title="Simulador Inmobiliario", page_icon="🏡", layout="wide")
 
-st.title("🏠 Predictor de Precio de Viviendas")
+st.title("🏡 Simulador Inteligente de Valor de Vivienda")
 
 st.markdown("""
-Modelo de Machine Learning entrenado en DataRobot para estimar el valor medio de viviendas
-basado en variables socioeconómicas y geográficas.
+### 📊 ¿Cómo funciona este modelo?
+
+Este sistema NO predice una casa individual.
+Predice el **valor promedio del mercado inmobiliario en una zona**, basado en características socioeconómicas.
+
+👉 Lo interpretamos como una **vivienda representativa del sector**
 """)
 
 # ==================================
-# INPUTS
+# INPUTS (SIMULACIÓN DE VIVIENDA)
 # ==================================
-st.sidebar.header("🔧 Variables del modelo")
+st.sidebar.header("🏠 Perfil de vivienda simulada")
 
-ingreso_mediano = st.sidebar.slider("Ingreso medio", 0.5, 15.0, 5.0, step=0.1)
+ingreso_mediano = st.sidebar.slider("Nivel de ingreso del sector", 0.5, 15.0, 5.0, 0.1)
 
 proximidad_oceano = st.sidebar.selectbox(
-    "Proximidad al océano",
+    "Ubicación",
     ["NEAR BAY", "INLAND", "NEAR OCEAN", "<1H OCEAN", "ISLAND"]
 )
 
-latitud = st.sidebar.slider("Latitud", 32.0, 42.0, 34.0, step=0.01)
-longitud = st.sidebar.slider("Longitud", -124.0, -114.0, -118.0, step=0.01)
+latitud = st.sidebar.slider("Latitud", 32.0, 42.0, 34.0, 0.01)
+longitud = st.sidebar.slider("Longitud", -124.0, -114.0, -118.0, 0.01)
 
-total_habitaciones = st.sidebar.number_input("Total habitaciones", 1, 10000, 2000)
-total_hogares = st.sidebar.number_input("Total hogares", 1, 5000, 500)
-poblacion = st.sidebar.number_input("Población", 1, 50000, 1500)
-edad_mediana_vivienda = st.sidebar.number_input("Edad mediana vivienda", 1, 100, 30)
+# 🔥 reinterpretación humana (NO técnica)
+tipo_vivienda = st.sidebar.selectbox(
+    "Tipo de entorno",
+    ["Zona urbana", "Zona suburbana", "Zona costera", "Zona rural"]
+)
+
+# variables técnicas del modelo (ocultas conceptualmente)
+total_habitaciones = st.sidebar.number_input("Habitaciones del sector", 100, 10000, 2000)
+total_hogares = st.sidebar.number_input("Hogares en el sector", 50, 5000, 500)
+poblacion = st.sidebar.number_input("Población del sector", 100, 50000, 1500)
+edad_mediana_vivienda = st.sidebar.number_input("Antigüedad promedio (años)", 1, 100, 30)
 
 # ==================================
 # DATAFRAME
@@ -93,7 +96,7 @@ datos = pd.DataFrame([{
 # ==================================
 # PREDICCIÓN
 # ==================================
-if st.button("🔍 Predecir precio de vivienda"):
+if st.button("🔍 Estimar valor de mercado"):
 
     resultado = hacer_prediccion(datos)
 
@@ -102,39 +105,56 @@ if st.button("🔍 Predecir precio de vivienda"):
     else:
         pred = resultado["data"][0]["prediction"]
 
-        st.success("✅ Predicción generada correctamente")
+        st.success("✅ Análisis completado")
 
-        st.metric("🏠 Valor estimado", f"${pred:,.2f} USD")
+        # ==================================
+        # RESULTADO PRINCIPAL
+        # ==================================
+        st.metric("🏡 Valor estimado del sector", f"${pred:,.2f} USD")
 
+        # ==================================
+        # INTERPRETACIÓN DE NEGOCIO
+        # ==================================
+        st.subheader("📊 Interpretación del mercado")
+
+        if pred < 150000:
+            st.warning("🔵 Zona de precio accesible")
+        elif pred < 300000:
+            st.info("🟡 Zona de precio medio")
+        else:
+            st.error("🔴 Zona de alto valor inmobiliario")
+
+        # ==================================
         # MAPA
-        st.subheader("📍 Ubicación de la vivienda")
+        # ==================================
+        st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
-        # GRÁFICO SIN MATPLOTLIB (CORREGIDO)
-        st.subheader("📊 Comparación de variables")
+        # ==================================
+        # PERFIL SIMULADO
+        # ==================================
+        st.subheader("🏠 Perfil de vivienda simulada")
 
-        st.bar_chart(
-            pd.DataFrame(
-                {
-                    "Valor": [ingreso_mediano, pred / 100000]
-                },
-                index=["Ingreso medio", "Precio estimado"]
-            )
-        )
+        st.write(f"""
+        - Tipo de entorno: {tipo_vivienda}  
+        - Ubicación: {proximidad_oceano}  
+        - Nivel de ingreso: {ingreso_mediano}  
+        - Edad promedio de viviendas: {edad_mediana_vivienda} años  
+        """)
 
 # ==================================
-# CONTACTO PROFESIONAL
+# CONTACTO
 # ==================================
 st.markdown("---")
-st.subheader("📲 Contacto")
+st.subheader("📲 Contacto profesional")
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20vi%20tu%20proyecto%20de%20predicción%20de%20viviendas"
+    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20vi%20tu%20simulador%20inmobiliario"
     target="_blank">
-    <button style="background-color:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;">
+    <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;">
     💬 WhatsApp Business
     </button>
     </a>
@@ -144,21 +164,19 @@ with col2:
     st.markdown("""
     <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130"
     target="_blank">
-    <button style="background-color:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
-    🔗 LinkedIn Profesional
+    <button style="background:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
+    🔗 LinkedIn
     </button>
     </a>
     """, unsafe_allow_html=True)
 
 # ==================================
-# FOOTER PROFESIONAL
+# FOOTER
 # ==================================
 st.markdown("---")
-
 st.markdown("""
-### 👩‍💻 Kely Jhojana Hincapié Zapata
+### 👩‍💻 Kely Jhojana Hincapié Zapata  
+Especialista en Analítica de Datos | Administración Financiera | Gestión de Redes de Datos  
 
-Especialista en Analítica de Datos | Profesional en Administración Financiera | Tecnóloga en Gestión de Redes de Datos  
-
-Proyecto: Sistema de predicción de precios de viviendas usando Machine Learning con DataRobot y visualización en Streamlit.
+📌 Proyecto: Simulador inmobiliario basado en Machine Learning (DataRobot + Streamlit)
 """)
