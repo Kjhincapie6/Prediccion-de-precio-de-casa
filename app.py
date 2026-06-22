@@ -201,7 +201,16 @@ with col2:
 # ==================================
 # FOOTER
 # ==================================
-st.markdown("---")
+st.markdown("""
+### 📌 Ejemplos observados en los datos de entrenamiento
+
+- Total habitaciones: desde cientos hasta más de 7.000 por zona.
+- Total dormitorios: desde decenas hasta más de 1.000 por zona.
+- Hogares: desde decenas hasta más de 1.000 por zona.
+- Población: desde cientos hasta varios miles de habitantes.
+
+Estos valores representan bloques censales completos y no viviendas individuales.
+""")
 
 st.markdown("""
 ### 👩‍💻 Kely Jhojana Hincapié Zapata  
