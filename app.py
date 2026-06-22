@@ -20,7 +20,7 @@ headers = {
 }
 
 # ==================================
-# PREDICCIÓN
+# FUNCIÓN PREDICCIÓN
 # ==================================
 def hacer_prediccion(df):
     url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
@@ -37,7 +37,7 @@ def hacer_prediccion(df):
     return response.json()
 
 # ==================================
-# UI PRINCIPAL
+# CONFIG STREAMLIT
 # ==================================
 st.set_page_config(
     page_title="Simulador Inmobiliario",
@@ -48,29 +48,49 @@ st.set_page_config(
 st.title("🏡 Simulador de Valor del Mercado Inmobiliario por Zona")
 
 # ==================================
-# EXPLICACIÓN DEL MODELO
+# DESCRIPCIÓN PRINCIPAL
 # ==================================
 st.markdown("""
-## 📊 ¿Qué predice realmente este modelo?
+## 📊 ¿Qué predice este modelo?
 
-Este modelo está basado en datasets tipo **California Housing Dataset**.
+Este sistema está basado en datasets tipo **California Housing Dataset**.
 
-👉 NO predice el valor de una vivienda individual.  
-👉 Predice el **valor promedio del mercado inmobiliario en una zona geográfica (bloque censal)**.
+👉 NO predice viviendas individuales.  
+👉 Predice el **valor promedio del mercado inmobiliario por zona geográfica (bloque censal)**.
+
+📌 Cada registro representa una ZONA del mercado, no una casa.
 
 ---
 
-📌 Cada fila del dataset representa una ZONA, no una casa.
-
-### Variables del modelo:
+### 🧠 Variables del modelo:
 - ingreso_mediano → ingreso promedio del sector  
-- total_habitaciones → total de habitaciones en la zona  
-- total_dormitorios → total de dormitorios en la zona  
+- total_habitaciones → habitaciones totales del área  
+- total_dormitorios → dormitorios totales  
 - poblacion → habitantes del bloque  
 - hogares → número de hogares  
 - edad_mediana_vivienda → antigüedad promedio  
+- proximidad_oceano → ubicación geográfica  
 
-⚠️ Los valores dependen fuertemente de la ubicación (zonas costeras vs interiores).
+⚠️ Los valores dependen fuertemente de la ubicación.
+""")
+
+# ==================================
+# EXPLICACIÓN DE ZONAS (MEJORADA)
+# ==================================
+st.markdown("""
+## 🌍 Interpretación de la ubicación en el modelo
+
+La variable **proximidad al océano** representa la ubicación geográfica del bloque censal y es un factor clave en la valoración del mercado inmobiliario.
+
+Estas categorías no representan tipos de vivienda, sino condiciones del entorno geográfico:
+
+- 🟦 **NEAR BAY** → zonas cercanas a bahías urbanas con alta demanda inmobiliaria  
+- 🌊 **NEAR OCEAN** → zonas costeras con alta valorización  
+- 🌆 **<1H OCEAN** → ubicaciones cercanas al mar (menos de 1 hora)  
+- 🌄 **INLAND** → zonas interiores con menor presión de mercado  
+- 🏝️ **ISLAND** → zonas insulares con comportamiento variable  
+
+📌 Esta variable influye significativamente en la predicción del valor del mercado.
 """)
 
 # ==================================
@@ -127,7 +147,6 @@ if st.button("🔍 Estimar valor de mercado"):
         st.subheader("🏡 Resultado del modelo")
         st.metric("Valor estimado de la zona", f"${pred:,.2f} USD")
 
-        # Interpretación
         st.subheader("📊 Interpretación del mercado")
 
         if pred < 150000:
@@ -137,15 +156,13 @@ if st.button("🔍 Estimar valor de mercado"):
         else:
             st.error("🔴 Zona de alto valor inmobiliario")
 
-        # Mapa
         st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
-        # Explicación profesional
         st.info("""
 📌 Interpretación profesional:
-Este valor representa el precio promedio del mercado inmobiliario en la zona analizada.
-No corresponde a una vivienda individual.
+El valor mostrado corresponde al precio promedio del mercado inmobiliario en la zona analizada.
+No representa una vivienda individual.
 """)
 
 # ==================================
@@ -158,7 +175,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20estuve%20revisando%20tu%20proyecto%20de%20simulador%20inmobiliario%20con%20Machine%20Learning.%0A%0AEstoy%20interesado%20en%20implementar%20un%20modelo%20similar%20en%20mi%20empresa%20para%20an%C3%A1lisis%20de%20valor%20de%20mercado%20por%20zonas.%0A%0AQuisiera%20conocer%20m%C3%A1s%20sobre%20tu%20enfoque%20t%C3%A9cnico%20y%20la%20posibilidad%20de%20adaptaci%C3%B3n%20a%20un%20entorno%20empresarial."
+    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20estuve%20revisando%20tu%20proyecto%20de%20simulador%20inmobiliario%20con%20Machine%20Learning.%20Estoy%20interesado%20en%20implementar%20un%20modelo%20similar%20en%20mi%20empresa%20para%20an%C3%A1lisis%20de%20valor%20de%20mercado%20por%20zonas.%20Quisiera%20conocer%20m%C3%A1s%20sobre%20tu%20enfoque%20t%C3%A9cnico%20y%20la%20posibilidad%20de%20adaptaci%C3%B3n%20a%20un%20entorno%20empresarial."
     target="_blank">
     <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;">
     💬 WhatsApp Business
@@ -184,7 +201,7 @@ st.markdown("---")
 st.markdown("""
 ### 👩‍💻 Kely Jhojana Hincapié Zapata  
 
-Especialista en Analítica de Datos | Administración Financiera | Gestión de Redes de Datos  
+Especialista en Analítica de Datos | Administración Financiera | Tecnóloga en Gestión de Redes de Datos  
 
 📌 Proyecto: Simulador inmobiliario basado en Machine Learning con DataRobot + Streamlit
 """)
