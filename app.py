@@ -53,14 +53,26 @@ st.title("🏡 Simulador de Valor del Mercado Inmobiliario por Zona")
 st.markdown("""
 ## 📊 ¿Qué predice este modelo?
 
-Este sistema está basado en datasets tipo **California Housing Dataset**.
+Este sistema está basado en datasets tipo **California Housing Dataset** y utiliza técnicas de Machine Learning para estimar el comportamiento del mercado inmobiliario.
 
-👉 NO predice viviendas individuales.  
-👉 Predice el **valor promedio del mercado inmobiliario por zona geográfica (bloque censal)**.
+👉 **NO predice una vivienda individual.**
 
-📌 Cada registro representa una ZONA del mercado, no una casa.
+👉 Predice el **valor promedio del mercado inmobiliario de una zona geográfica (bloque censal)** utilizando variables socioeconómicas y características del entorno.
 
-⚠️ Los valores dependen fuertemente de la ubicación.
+📌 Cada registro del conjunto de datos representa una **zona residencial**, no una casa específica.
+
+### 🧠 Variables utilizadas
+
+- Ingreso medio de la zona
+- Latitud y longitud
+- Total de habitaciones de la zona
+- Total de dormitorios de la zona
+- Población de la zona
+- Número de hogares
+- Edad mediana de las viviendas
+- Proximidad al océano
+
+⚠️ Debido a que el modelo trabaja con zonas geográficas completas, es normal observar valores de cientos o miles de habitaciones, hogares o habitantes.
 """)
 
 # ==================================
