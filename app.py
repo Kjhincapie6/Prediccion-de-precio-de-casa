@@ -57,9 +57,7 @@ Este sistema está basado en datasets tipo **California Housing Dataset**.
 
 👉 NO predice viviendas individuales.  
 👉 Predice el **valor promedio del mercado inmobiliario por zona geográfica (bloque censal)**.
-
 📌 Cada registro representa una ZONA del mercado, no una casa.
-
 ⚠️ Los valores dependen fuertemente de la ubicación.
 """)
 
