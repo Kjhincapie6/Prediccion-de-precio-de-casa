@@ -60,17 +60,6 @@ Este sistema está basado en datasets tipo **California Housing Dataset**.
 
 📌 Cada registro representa una ZONA del mercado, no una casa.
 
----
-
-### 🧠 Variables del modelo:
-- ingreso_mediano → ingreso promedio del sector  
-- total_habitaciones → habitaciones totales del área  
-- total_dormitorios → dormitorios totales  
-- poblacion → habitantes del bloque  
-- hogares → número de hogares  
-- edad_mediana_vivienda → antigüedad promedio  
-- proximidad_oceano → ubicación geográfica  
-
 ⚠️ Los valores dependen fuertemente de la ubicación.
 """)
 
