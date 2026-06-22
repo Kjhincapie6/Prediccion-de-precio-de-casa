@@ -160,10 +160,14 @@ if st.button("🔍 Estimar valor de mercado"):
         st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
-        st.info("""
-📌 Interpretación profesional:
-El valor mostrado corresponde al precio promedio del mercado inmobiliario en la zona analizada.
-No representa una vivienda individual.
+st.info("""
+ℹ️ Importante
+
+Las variables como habitaciones, dormitorios, hogares y población corresponden
+a características agregadas de una zona geográfica completa y no a una vivienda individual.
+
+Por esta razón, valores como 2.000 habitaciones o 1.500 habitantes son totalmente
+normales dentro del conjunto de datos utilizado para entrenar el modelo.
 """)
 
 # ==================================
