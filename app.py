@@ -190,6 +190,16 @@ with col1:
     </a>
     """, unsafe_allow_html=True)
 
+with col2:
+    st.markdown("""
+    <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130/"
+    target="_blank">
+    <button style="background:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
+    🔗 LinkedIn
+    </button>
+    </a>
+    """, unsafe_allow_html=True)
+
 # ==================================
 # FOOTER
 # ==================================
