@@ -251,45 +251,58 @@ if archivo_csv is not None:
 # ==================================
 # AUTOR (SIN CAMBIOS VISUALES)
 # ==================================
-# ==================================
-# CONTACTO
-# ==================================
-st.markdown("---")
-st.subheader("📲 Contacto profesional")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    # Mensaje corto, limpio y directo para iniciar contacto profesional inmediato
-    mensaje_wa = "Hola%20Kely,%20vi%20tu%20Simulador%20Inmobiliario%20con%20IA%20y%20me%20interesa%20conocer%20m%C3%A1s%20sobre%20tu%20enfoque%20t%C3%A9cnico%20para%20empresas."
-    
-    st.markdown(f"""
-    <a href="https://wa.me/573015704518?text={mensaje_wa}" target="_blank">
-    <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;">
-    💬 WhatsApp Business
-    </button>
-    </a>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown("""
-    <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130/" target="_blank">
-    <button style="background:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;">
-    🔗 LinkedIn
-    </button>
-    </a>
-    """, unsafe_allow_html=True)
-
-# ==================================
-# FOOTER
-# ==================================
 st.markdown("""
-### 👩‍💻 Kely Jhojana Hincapié Zapata  
+<style>
+.autor-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.08);
+    margin-top: 30px;
+}
 
-Especialista en Analítica de Datos | Administración Financiera | Tecnóloga en Gestión de Redes de Datos  
+.autor-nombre {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0F172A;
+}
 
-📌 Proyecto: Simulador inmobiliario basado en Machine Learning con DataRobot + Streamlit
-""")
+.autor-profesion {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 15px;
+}
+
+.autor-info {
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.8;
+}
+
+.linkedin-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #0077B5;
+    color: white !important;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-weight: 600;
+}
+</style>
+
+<div class="autor-card">
+
+<div class="autor-nombre">
+Desarrollado por Kely Jhojana Hincapié Zapata
+</div>
+
+<div class="autor-profesion">
+Especialista en Analítica de Datos | Profesional en Administración Financiera |
+Tecnóloga en Gestión de Redes de Datos
+</div>
+
 <div class="autor-info">
 
 <a href="https://wa.me/573015704518?text=Hola%20Kely,%20he%20visto%20tu%20proyecto%20de%20Machine%20Learning%20y%20quisiera%20más%20información."
