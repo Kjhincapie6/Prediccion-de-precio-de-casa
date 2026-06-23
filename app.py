@@ -179,21 +179,13 @@ st.subheader("📲 Contacto profesional")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("""
-    <a href="https://wa.me/573015704518?text=Hola%20Kely,%20estuve%20revisando%20tu%20proyecto%20de%20simulador%20inmobiliario%20con%20Machine%20Learning.%20Estoy%20interesado%20en%20implementar%20un%20modelo%20similar%20en%20mi%20empresa%20para%20an%C3%A1lisis%20de%20valor%20de%20mercado%20por%20zonas.%20Quisiera%20conocer%20m%C3%A1s%20sobre%20tu%20enfoque%20t%C3%A9cnico%20y%20la%20posibilidad%20de%20adaptaci%C3%B3n%20a%20un%20entorno%20empresarial."
-    target="_blank">
-    <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;">
+    # Mensaje corto, limpio y directo para iniciar contacto profesional inmediato
+    mensaje_wa = "Hola%20Kely,%20vi%20tu%20Simulador%20Inmobiliario%20con%20IA%20y%20me%20interesa%20conocer%20m%C3%A1s%20sobre%20tu%20enfoque%20t%C3%A9cnico%20para%20empresas."
+    
+    st.markdown(f"""
+    <a href="https://wa.me/573015704518?text={mensaje_wa}" target="_blank">
+    <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;">
     💬 WhatsApp Business
-    </button>
-    </a>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown("""
-    <a href="https://www.linkedin.com/in/kely-jhojana-hincapi%C3%A9-zapata-502587130/"
-    target="_blank">
-    <button style="background:#0077B5;color:white;padding:10px 18px;border-radius:8px;border:none;">
-    🔗 LinkedIn
     </button>
     </a>
     """, unsafe_allow_html=True)
