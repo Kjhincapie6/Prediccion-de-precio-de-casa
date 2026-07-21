@@ -1,40 +1,6 @@
 import streamlit as st
 import pandas as pd
-import requests
-import os
-
-# ==================================
-# CONFIG DATAROBOT
-# ==================================
-API_KEY = os.getenv("DATAROBOT_API_KEY")
-DEPLOYMENT_ID = os.getenv("DATAROBOT_DEPLOYMENT_ID")
-HOST = os.getenv("DATAROBOT_HOST")
-
-if not API_KEY or not DEPLOYMENT_ID or not HOST:
-    st.error("❌ Faltan credenciales de DataRobot")
-    st.stop()
-
-headers = {
-    "Authorization": f"Token {API_KEY}",
-    "Content-Type": "application/json"
-}
-
-# ==================================
-# FUNCIÓN PREDICCIÓN
-# ==================================
-def hacer_prediccion(df):
-    url = f"{HOST}/api/v2/deployments/{DEPLOYMENT_ID}/predictions"
-
-    response = requests.post(
-        url,
-        headers=headers,
-        json=df.to_dict(orient="records")
-    )
-
-    if response.status_code != 200:
-        return {"error": response.text}
-
-    return response.json()
+from predict_immobiliario import predecir_valor
 
 # ==================================
 # CONFIG STREAMLIT
@@ -44,7 +10,6 @@ st.set_page_config(
     page_icon="🏡",
     layout="wide"
 )
-
 st.title("🏡 Simulador de Valor del Mercado Inmobiliario por Zona")
 
 # ==================================
@@ -52,46 +17,28 @@ st.title("🏡 Simulador de Valor del Mercado Inmobiliario por Zona")
 # ==================================
 st.markdown("""
 ## 📊 ¿Qué predice este modelo?
-
 Este sistema está basado en datasets tipo **California Housing Dataset** y utiliza técnicas de Machine Learning para estimar el comportamiento del mercado inmobiliario.
-
 👉 **NO predice una vivienda individual.**
-
 👉 Predice el **valor promedio del mercado inmobiliario de una zona geográfica (bloque censal)** utilizando variables socioeconómicas y características del entorno.
-
 📌 Cada registro del conjunto de datos representa una **zona residencial**, no una casa específica.
-
 ### 🧠 Variables utilizadas
-
 - Ingreso medio de la zona
-- Latitud y longitud
-- Total de habitaciones de la zona
-- Total de dormitorios de la zona
-- Población de la zona
-- Número de hogares
 - Edad mediana de las viviendas
-- Proximidad al océano
-
-⚠️ Debido a que el modelo trabaja con zonas geográficas completas, es normal observar valores de cientos o miles de habitaciones, hogares o habitantes.
+- Promedio de habitaciones
+- Promedio de dormitorios
+- Población
+- Ocupación promedio
+- Latitud y Longitud
+⚠️ Debido a que el modelo trabaja con zonas geográficas completas, es normal observar valores de cientos o miles de habitantes.
 """)
 
 # ==================================
-# EXPLICACIÓN DE ZONAS (MEJORADA)
+# EXPLICACIÓN DE UBICACIÓN
 # ==================================
 st.markdown("""
 ## 🌍 Interpretación de la ubicación en el modelo
-
-La variable **proximidad al océano** representa la ubicación geográfica del bloque censal y es un factor clave en la valoración del mercado inmobiliario.
-
-Estas categorías no representan tipos de vivienda, sino condiciones del entorno geográfico:
-
-- 🟦 **NEAR BAY** → zonas cercanas a bahías urbanas con alta demanda inmobiliaria  
-- 🌊 **NEAR OCEAN** → zonas costeras con alta valorización  
-- 🌆 **<1H OCEAN** → ubicaciones cercanas al mar (menos de 1 hora)  
-- 🌄 **INLAND** → zonas interiores con menor presión de mercado  
-- 🏝️ **ISLAND** → zonas insulares con comportamiento variable  
-
-📌 Esta variable influye significativamente en la predicción del valor del mercado.
+La **latitud y longitud** representan la ubicación geográfica del bloque censal y es un factor clave en la valoración del mercado inmobiliario.
+📌 Estas variables influyen significativamente en la predicción del valor del mercado.
 """)
 
 # ==================================
@@ -99,60 +46,72 @@ Estas categorías no representan tipos de vivienda, sino condiciones del entorno
 # ==================================
 st.sidebar.header("🏠 Variables del modelo")
 
-ingreso_mediano = st.sidebar.slider("Ingreso medio de la zona", 0.5, 15.0, 5.0, 0.1)
-
-proximidad_oceano = st.sidebar.selectbox(
-    "Proximidad al océano",
-    ["NEAR BAY", "INLAND", "NEAR OCEAN", "<1H OCEAN", "ISLAND"]
+ingreso_mediano = st.sidebar.slider(
+    "Ingreso medio de la zona ($10k USD)",
+    0.5, 15.0, 5.0, 0.1
 )
 
-latitud = st.sidebar.slider("Latitud", 32.0, 42.0, 34.0, 0.01)
-longitud = st.sidebar.slider("Longitud", -124.0, -114.0, -118.0, 0.01)
+edad_vivienda = st.sidebar.slider(
+    "Edad mediana de viviendas (años)",
+    1, 52, 30, 1
+)
 
-total_habitaciones = st.sidebar.number_input("Total habitaciones (zona)", 100, 10000, 2000)
-total_dormitorios = st.sidebar.number_input("Total dormitorios (zona)", 50, 5000, 500)
-poblacion = st.sidebar.number_input("Población (zona)", 100, 50000, 1500)
-hogares = st.sidebar.number_input("Hogares (zona)", 50, 5000, 500)
-edad_mediana_vivienda = st.sidebar.number_input("Edad mediana vivienda", 1, 100, 30)
+promedio_habitaciones = st.sidebar.slider(
+    "Promedio de habitaciones",
+    2.0, 10.0, 5.0, 0.1
+)
 
-# ==================================
-# DATAFRAME
-# ==================================
-datos = pd.DataFrame([{
-    "ingreso_mediano": ingreso_mediano,
-    "proximidad_oceano": proximidad_oceano,
-    "latitud": latitud,
-    "longitud": longitud,
-    "total_habitaciones": total_habitaciones,
-    "total_dormitorios": total_dormitorios,
-    "poblacion": poblacion,
-    "hogares": hogares,
-    "edad_mediana_vivienda": edad_mediana_vivienda
-}])
+promedio_dormitorios = st.sidebar.slider(
+    "Promedio de dormitorios",
+    0.5, 6.0, 1.5, 0.1
+)
+
+poblacion = st.sidebar.number_input(
+    "Población de la zona",
+    100, 35000, 1500, 100
+)
+
+ocupacion_promedio = st.sidebar.slider(
+    "Ocupación promedio (personas/hogar)",
+    0.5, 10.0, 3.0, 0.1
+)
+
+latitud = st.sidebar.slider(
+    "Latitud",
+    32.0, 42.0, 34.0, 0.01
+)
+
+longitud = st.sidebar.slider(
+    "Longitud",
+    -124.0, -114.0, -118.0, 0.01
+)
 
 # ==================================
 # PREDICCIÓN
 # ==================================
 if st.button("🔍 Estimar valor de mercado"):
-
-    resultado = hacer_prediccion(datos)
-
-    if "error" in resultado:
-        st.error(f"Error DataRobot: {resultado['error']}")
-    else:
-
-        pred = resultado["data"][0]["prediction"]
+    try:
+        resultado = predecir_valor(
+            ingreso_mediano=ingreso_mediano,
+            edad_vivienda=edad_vivienda,
+            promedio_habitaciones=promedio_habitaciones,
+            promedio_dormitorios=promedio_dormitorios,
+            poblacion=poblacion,
+            ocupacion_promedio=ocupacion_promedio,
+            latitud=latitud,
+            longitud=longitud
+        )
 
         st.success("✅ Predicción generada correctamente")
 
         st.subheader("🏡 Resultado del modelo")
-        st.metric("Valor estimado de la zona", f"${pred:,.2f} USD")
+        valor_usd = resultado["prediction_usd"]
+        st.metric("Valor estimado de la zona", f"${valor_usd:,.0f} USD")
 
         st.subheader("📊 Interpretación del mercado")
-
-        if pred < 150000:
+        if valor_usd < 150000:
             st.info("🔵 Zona de valor accesible")
-        elif pred < 300000:
+        elif valor_usd < 300000:
             st.warning("🟡 Zona de valor medio")
         else:
             st.error("🔴 Zona de alto valor inmobiliario")
@@ -160,14 +119,13 @@ if st.button("🔍 Estimar valor de mercado"):
         st.subheader("📍 Ubicación del análisis")
         st.map(pd.DataFrame({"lat": [latitud], "lon": [longitud]}))
 
+    except Exception as e:
+        st.error(f"❌ Error en la predicción: {str(e)}")
+
 st.info("""
 ℹ️ Importante
-
-Las variables como habitaciones, dormitorios, hogares y población corresponden
+Las variables como habitaciones, dormitorios, población y ocupación corresponden
 a características agregadas de una zona geográfica completa y no a una vivienda individual.
-
-Por esta razón, valores como 2.000 habitaciones o 1.500 habitantes son totalmente
-normales dentro del conjunto de datos utilizado para entrenar el modelo.
 """)
 
 # ==================================
@@ -175,13 +133,11 @@ normales dentro del conjunto de datos utilizado para entrenar el modelo.
 # ==================================
 st.markdown("---")
 st.subheader("📲 Contacto profesional")
-
 col1, col2 = st.columns(2)
 
 with col1:
-    # Mensaje corto, limpio y directo para iniciar contacto profesional inmediato
     mensaje_wa = "Hola%20Kely,%20vi%20tu%20Simulador%20Inmobiliario%20con%20IA%20y%20me%20interesa%20conocer%20m%C3%A1s%20sobre%20tu%20enfoque%20t%C3%A9cnico%20para%20empresas."
-    
+
     st.markdown(f"""
     <a href="https://wa.me/573015704518?text={mensaje_wa}" target="_blank">
     <button style="background:#25D366;color:white;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;">
@@ -203,11 +159,8 @@ with col2:
 # ==================================
 # FOOTER
 # ==================================
-
 st.markdown("""
-### 👩‍💻 Kely Jhojana Hincapié Zapata  
-
-Especialista en Analítica de Datos | Administración Financiera | Tecnóloga en Gestión de Redes de Datos  
-
-📌 Proyecto: Simulador inmobiliario basado en Machine Learning con DataRobot + Streamlit
-""") 
+### 👩‍💻 Kely Jhojana Hincapié Zapata
+Especialista en Analítica de Datos | Administración Financiera | Tecnóloga en Gestión de Redes de Datos
+📌 Proyecto: Simulador inmobiliario basado en Machine Learning (scikit-learn), desplegado en Streamlit Cloud
+""")
